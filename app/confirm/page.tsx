@@ -3,16 +3,13 @@
 
 import { Button } from "@/components/ui/button";
 import { Status400 } from "@/components/errors/400";
-
 import { useEffect, useState } from "react";
 import { sendRequest } from "@/helper/sendRequest";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Form, InputOTP } from "@/components/custom-ui/form";
-
-import { supabase } from "@/supabase/client";
+import { Card } from "@/components/custom-ui/card";
 import { useRouter } from "next/navigation";
 
 const confirmFormSchema = z.object({
@@ -21,21 +18,6 @@ const confirmFormSchema = z.object({
             .min(6, "O código deve ter 6 caracteres")
             .max(6, "O código deve ter 6 caracteres")
 })
-.refine(async (formData) => {
-    const email = localStorage.getItem("email");
-
-    const { data } : { data: any } = await supabase
-        .from("users")
-        .select("validationCode")
-        .eq("email", email)
-        .single()
-
-    return data.validationCode === formData.validationCode
-}, {
-    message: "Código inválido",
-    path: ["validationCode"]
-});
-
 
 export default function ConfirmEmail() {
 
@@ -52,26 +34,35 @@ export default function ConfirmEmail() {
 
     useEffect(() => {      
         setEmail(localStorage.getItem("email"));
-        setLoading(false);       
+        setLoading(false);
     }, [])
 
-    const onSubmit = (data: z.infer<typeof confirmFormSchema>) => {
+    const onConfirmSubmit = async (formData: z.infer<typeof confirmFormSchema>) => {
+        const { data } = await sendRequest("/api/confirm/validation-code", "POST", { email: email });
+
+        if (data.validationCode !== formData.validationCode) {
+            confirmForm.setError("validationCode", {
+                message: "Código inválido"
+            });
+            return;
+        }
+  
         router.push("/")
         localStorage.removeItem("email");
-        sendRequest("/api/confirm", "POST", { ...data, email: email });       
+        sendRequest("/api/confirm", "POST", { ...formData, email: email });       
     }
 
     return (email ?
         <div className="flex items-center justify-center h-screen">
-            <div className="flex flex-col justify-center w-[90%] h-[90%] max-w-[500px] p-4">
+            <Card>
                 <div className="self-center space-y-4">
                     <h1 className="text-xl font-semibold leading-none tracking-tight">Confirmar código</h1>
-                    <p className="text-sm text-gray-800">
+                    <p className="text-sm text-gray-800 break-all">
                         Um código de confirmação foi enviado para
                         <b className="text-primary underline-offset-4 text-sm font-semibold">{" " + email}</b>.
                         Por favor, verifique sua caixa de entrada e siga as instruções para completar o processo de registro.
                     </p>
-                    <Form form={confirmForm} onSubmit={onSubmit}>
+                    <Form form={confirmForm} onSubmit={onConfirmSubmit}>
                         <div className="flex gap-4">
                             <InputOTP form={confirmForm} name="validationCode" length={6}/>
                             <Button type="submit" className="mt-2">Confirmar</Button>
@@ -80,7 +71,7 @@ export default function ConfirmEmail() {
                     <p className="text-sm text-gray-800">Não recebeu o código?</p>
                     <Button type="button" className="max-w-[500px]">Reenviar</Button>
                 </div>
-            </div>
+            </Card>
         </div> : !loading && <Status400/>
     )
 }

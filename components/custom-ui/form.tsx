@@ -49,6 +49,7 @@ interface InputProps {
     type?: string;
 }
 const Input = ({ form, name, placeholder, type }: InputProps) => {
+
     return (
         <FormField
             control={form.control}

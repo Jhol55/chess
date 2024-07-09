@@ -30,8 +30,8 @@ async function sendEmail({ to, subject, text, template, templateProps } : SendEm
     await transporter.sendMail({
         from: '"Chess" <chess-test@outlook.com>', 
         to: to, 
-        subject: 'Olá', 
-        text: 'Olá, este é um email de teste.', 
+        subject: subject, 
+        text: text, 
         html: html 
     });
 }

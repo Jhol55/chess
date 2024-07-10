@@ -3,9 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Form, Input } from "@/components/custom-ui/form";
+import { ButtonWithLoading, Form, Input } from "@/components/custom-ui/form";
 import { Card } from "@/components/custom-ui/card";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { sendRequest } from "@/helper/sendRequest";
@@ -50,26 +49,24 @@ export default function RegisterAccount() {
     });
 
     const onRegisterSubmit = async (formData: z.infer<typeof registerFormSchema>) => {
+        const { data } = await sendRequest("/api/register", "POST", formData);
 
-        const { data } = await sendRequest("/api/register/check-email", "POST", formData);
-
-        if (!data.emailAvailable) {
+        if (!data.success) {
             registerForm.setError("email", {
                 message: "Email já cadastrado"
             });
             return;
         }
 
-        router.push("/confirm");
-        localStorage.setItem("email", formData.email);       
-        sendRequest("/api/register", "POST", formData);
+        localStorage.setItem("email", formData.email);  
+        router.push("/confirm");                
     };
 
     return (
         <div className="flex items-center justify-center h-screen">
             <Card>
-                <h1 className="text-xl font-semibold leading-none tracking-tight">Cadastrar uma conta</h1>
-                <span className="text-sm text-muted-foreground">
+                <h2 className="text-xl font-semibold leading-none tracking-tight px-2">Cadastrar uma conta</h2>
+                <span className="text-sm text-muted-foreground px-2">
                     Já possui uma conta?
                     <Link href="/" className="text-primary underline-offset-4 hover:underline text-sm pl-2 font-semibold">Iniciar Sessão</Link>
                 </span>
@@ -78,7 +75,7 @@ export default function RegisterAccount() {
                     <Input form={registerForm} name="email" placeholder="Email"/>
                     <Input form={registerForm} name="password" placeholder="Senha" type="password" />
                     <Input form={registerForm} name="repeatPassword" placeholder="Repetir senha" type="password" />
-                    <Button className="self-center" type="submit">Cadastre-se</Button>
+                    <ButtonWithLoading form={registerForm} type="submit">Cadastre-se</ButtonWithLoading>
                 </Form>
             </Card>
         </div>

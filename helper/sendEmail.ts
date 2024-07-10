@@ -11,9 +11,7 @@ interface SendEmailProps {
 }
 
 async function sendEmail({ to, subject, text, template, templateProps } : SendEmailProps) {
-
     const { renderToString } = await import('react-dom/server');
-
     const reactElement = React.createElement<{ templateProps?: object }>(template, templateProps);
     const html = renderToString(reactElement);
 

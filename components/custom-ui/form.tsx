@@ -17,12 +17,12 @@ import {
     InputOTPSlot,
 } from "@/components/ui/input-otp";
 
-
 import { UseFormReturn } from "react-hook-form";
-
 import { Input as _Input } from "@/components/ui/input";
 import { Checkbox as _Checkbox } from "@/components/ui/checkbox"
-import React, { useId, useState } from "react";
+import { Button } from "@/components/ui/button"
+import { Loader2 } from "lucide-react"
+import React, { useEffect, useId, useState } from "react";
 
 interface FormProps {
     form: UseFormReturn<any>;
@@ -32,7 +32,10 @@ interface FormProps {
 const Form = ({ form, onSubmit, children }: FormProps) => {
     return (
         <_Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-4" autoComplete="on">
+            <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="flex flex-col space-y-4 py-2 px-2 -translate-y-2 relative overflow-hidden"
+                autoComplete="on">
                 {children}
             </form>
         </_Form>
@@ -57,7 +60,11 @@ const Input = ({ form, name, placeholder, type }: InputProps) => {
             render={({ field }) => (
                 <FormItem>
                     <FormControl>
-                        <_Input placeholder={placeholder} type={type} {...field} />
+                        <_Input
+                            placeholder={placeholder}
+                            type={type}
+                            {...field}
+                        />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -73,7 +80,7 @@ interface InputOTPProps {
     onComplete?: () => void;
 }
 
-const InputOTP = ({ form, name, length } : InputOTPProps) => {
+const InputOTP = ({ form, name, length }: InputOTPProps) => {
 
     return (
         <FormField
@@ -101,19 +108,64 @@ const InputOTP = ({ form, name, length } : InputOTPProps) => {
 
 
 interface CheckboxProps {
+    form: UseFormReturn<any>;
+    name: string;
     children: string;
 }
 
-const Checkbox = ({ children }: CheckboxProps) => {
+const Checkbox = ({ form, name, children }: CheckboxProps) => {
     const id = useId()
 
     return (
-        <div className="flex items-center gap-2">
-            <_Checkbox id={id} />
-            <label htmlFor={id} className="text-sm text-muted-foreground cursor-pointer">{children}</label>
+        <div className="flex items-center gap-2 py-2">
+            <FormField
+                control={form.control}
+                name={name}
+                render={({ field }) => (
+                    <FormItem>
+                        <FormControl>
+                            <_Checkbox
+                                className="absolute -translate-y-2"
+                                id={id}
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                {...field}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <label
+                htmlFor={id}
+                className="absolute translate-x-6 text-sm text-muted-foreground cursor-pointer">
+                {children}
+            </label>
         </div>
     )
 };
 
+interface ButtonWithLoadingProps {
+    form: UseFormReturn<any>;
+    type: "submit" | "button" | "reset";
+    className?: string;
+    children: string;
+}
 
-export { Form, Input, Checkbox, InputOTP };
+const ButtonWithLoading = ({ form, type, className, children } : ButtonWithLoadingProps) => {
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        setIsLoading(form.formState.isSubmitting || form.formState.isSubmitSuccessful);
+    }, [form.formState.isSubmitSuccessful, form.formState.isSubmitting]);
+
+    return (
+        <Button disabled={isLoading} type={type} className={className}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {children}
+        </Button>
+    )
+}
+
+
+export { Form, Input, Checkbox, InputOTP, ButtonWithLoading };

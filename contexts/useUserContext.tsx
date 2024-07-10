@@ -1,16 +1,15 @@
 "use client";
 
-import React, { createContext, Dispatch, SetStateAction, useState } from "react";
+import React, { createContext, Dispatch, SetStateAction, useEffect, useState } from "react";
 
 interface UserContextProps {
-    email: string;
-    setEmail: Dispatch<SetStateAction<string>>;
+    isAuth: boolean;
+    setIsAuth: Dispatch<SetStateAction<boolean>>;
 } 
 
-
 const UserContext = createContext<UserContextProps>({
-    email: "",
-    setEmail: () => {}
+    isAuth: false,
+    setIsAuth: () => {}
 });
 
 interface UserProvideProps {
@@ -18,11 +17,10 @@ interface UserProvideProps {
 }
 
 const UserProvider = ({ children } : UserProvideProps) => {
-
-    const [email, setEmail] = useState("")
+    const [isAuth, setIsAuth] = useState(false);
 
     return (
-        <UserContext.Provider value={{ email, setEmail }}>
+        <UserContext.Provider value={{ isAuth, setIsAuth }}>
             {children}
         </UserContext.Provider>
     )

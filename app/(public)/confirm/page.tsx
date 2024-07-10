@@ -8,7 +8,7 @@ import { sendRequest } from "@/helper/sendRequest";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Form, InputOTP } from "@/components/custom-ui/form";
+import { ButtonWithLoading, Form, InputOTP } from "@/components/custom-ui/form";
 import { Card } from "@/components/custom-ui/card";
 import { useRouter } from "next/navigation";
 
@@ -38,38 +38,37 @@ export default function ConfirmEmail() {
     }, [])
 
     const onConfirmSubmit = async (formData: z.infer<typeof confirmFormSchema>) => {
-        const { data } = await sendRequest("/api/confirm/validation-code", "POST", { email: email });
+        const { data } = await sendRequest("/api/confirm", "POST", { ...formData, email: email });  
 
-        if (data.validationCode !== formData.validationCode) {
+        if (!data.success) {
             confirmForm.setError("validationCode", {
                 message: "Código inválido"
             });
             return;
         }
-  
-        router.push("/")
+
         localStorage.removeItem("email");
-        sendRequest("/api/confirm", "POST", { ...formData, email: email });       
-    }
+        router.push("/");          
+    };
 
     return (email ?
         <div className="flex items-center justify-center h-screen">
             <Card>
                 <div className="self-center space-y-4">
-                    <h1 className="text-xl font-semibold leading-none tracking-tight">Confirmar código</h1>
-                    <p className="text-sm text-gray-800 break-all">
+                    <h2 className="text-xl font-semibold leading-none tracking-tight px-2">Confirmar código</h2>
+                    <p className="text-sm text-gray-800 px-2">
                         Um código de confirmação foi enviado para
-                        <b className="text-primary underline-offset-4 text-sm font-semibold">{" " + email}</b>.
+                        <b className="text-primary text-sm font-semibold">{" " + email}</b>.
                         Por favor, verifique sua caixa de entrada e siga as instruções para completar o processo de registro.
                     </p>
                     <Form form={confirmForm} onSubmit={onConfirmSubmit}>
                         <div className="flex gap-4">
                             <InputOTP form={confirmForm} name="validationCode" length={6}/>
-                            <Button type="submit" className="mt-2">Confirmar</Button>
+                            <ButtonWithLoading form={confirmForm} type="submit" className="mt-2">Confirmar</ButtonWithLoading>
                         </div>
                     </Form>
-                    <p className="text-sm text-gray-800">Não recebeu o código?</p>
-                    <Button type="button" className="max-w-[500px]">Reenviar</Button>
+                    <p className="text-sm text-gray-800 px-2">Não recebeu o código?</p>
+                    <Button type="button" className="max-w-[500px] ml-2">Reenviar</Button>
                 </div>
             </Card>
         </div> : !loading && <Status400/>

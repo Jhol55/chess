@@ -1,19 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/supabase/client";
 
+export async function POST(request: NextRequest) {
+  const requestData = await request.json();
 
-export async function POST(request: Request) {
-
-  const { email, validationCode } = await request.json();
-
-  const { error } = await supabase
+  const { data } = await supabase
     .from('users')
     .update({ confirmed: true })
-    .eq("email", email)
-    .eq("validationCode", validationCode);
+    .eq("email", requestData.email)
+    .eq("validationCode", requestData.validationCode)
+    .select("email");
 
   return NextResponse.json({
-    error: error
+    success: !!data?.length
   });
 };
 
